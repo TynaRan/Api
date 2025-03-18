@@ -123,9 +123,6 @@ HumanAutomaticSection:AddToggle("Silent Killer", false, function(state)
         wait(0.00005)
     end
 end)
-
-SettingsTab:CreateConfigSystem("right")
-
 PlayerSection:AddToggle("Spinbot", false, function(state)
     spinbotEnabled = state
     while spinbotEnabled do
