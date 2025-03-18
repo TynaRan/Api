@@ -125,22 +125,22 @@ HumanAutomaticSection:AddToggle("Silent Killer", false, function(state)
 end)
 
 SettingsTab:CreateConfigSystem("right")
+
 PlayerSection:AddToggle("Spinbot", false, function(state)
     spinbotEnabled = state
     while spinbotEnabled do
         if not spinbotEnabled then break end
-            local player = game.Players.LocalPlayer
-            local character = player.Character or player.CharacterAdded:Wait()
-              if character and character:FindFirstChild("HumanoidRootPart") then
-                local rootPart = character.HumanoidRootPart
-                  if not spinbotEnabled then break end
-                    wait(0.00000001)
-                    rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(100), 0)
-                end
-            end
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            if not spinbotEnabled then break end
+            wait(0.00000001)
+            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(100), 0)
         end
     end
 end)
-PlayerSection:AddButton("hitbox", function(nocallback)     
+
+PlayerSection:AddButton("hitbox", function(nocallback)
     loadstring(game:HttpGet("https://github.com/Drop56796/CreepyEyeHub/blob/main/thr.lua?raw=true"))()
 end)
