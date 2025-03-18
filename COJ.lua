@@ -125,44 +125,6 @@ HumanAutomaticSection:AddToggle("Silent Killer", false, function(state)
 end)
 
 SettingsTab:CreateConfigSystem("right")
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/cat"))()
-local Window = Library:CreateWindow("COJ -1.0", Vector2.new(492, 598), Enum.KeyCode.RightControl)
-
-local SettingsTab = Window:CreateTab("Setting")
-local PlayerSection = SettingsTab:CreateSector("Player", "left")
-
-local spinbotEnabled = false
-local loopEnabled = false
-local speedNormal = 16
-local fovNormal = 70
-
-PlayerSection:AddSlider("Speed Normal", 16, 10, 100, 1, function(value)
-    speedNormal = value
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    if character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = speedNormal
-    end
-end)
-
-PlayerSection:AddSlider("FOV Normal", 70, 40, 120, 1, function(value)
-    fovNormal = value
-    workspace.CurrentCamera.FieldOfView = fovNormal
-end)
-
-PlayerSection:AddToggle("Loop Mode", false, function(state)
-    loopEnabled = state
-    while loopEnabled do
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = speedNormal
-        end
-        workspace.CurrentCamera.FieldOfView = fovNormal
-        wait(0.1)
-    end
-end)
-
 PlayerSection:AddToggle("Spinbot", false, function(state)
     spinbotEnabled = state
     while spinbotEnabled do
