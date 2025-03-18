@@ -179,3 +179,6 @@ PlayerSection:AddToggle("Spinbot", false, function(state)
         end
     end
 end)
+PlayerSection:AddButton("hitbox", function(nocallback)     
+    loadstring(game:HttpGet("https://github.com/Drop56796/CreepyEyeHub/blob/main/thr.lua?raw=true"))()
+end)
