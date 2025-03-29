@@ -3,10 +3,11 @@
 --Team:COJ
 --Script source↓↓↓
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/cat"))()
-local Window = Library:CreateWindow("COJ 1.0", Vector2.new(492, 598), Enum.KeyCode.RightControl)
+local Window = Library:CreateWindow("COJ 1.1", Vector2.new(492, 598), Enum.KeyCode.RightControl)
 
 local SettingsTab = Window:CreateTab("Setting")
 local PlayerSection = SettingsTab:CreateSector("Player", "left")
+local PlayerSection2 = SettingsTab:CreateSector("esp", "right")
 local spinbotEnabled = false
 local loopEnabled = false
 local speedNormal = 16
@@ -217,3 +218,93 @@ PlayerSection:AddToggle("Auto TP (Different Team)", false, function(state)
         task.spawn(autoTeleport)
     end
 end)
+
+local T, P, L = game:GetService("Teams"), game:GetService("Players"), game.Players.LocalPlayer
+local E, N, I, H, D, A, V, F, S, J = false, false, false, false, false, false, false, false, false, false
+
+local function cE(p)
+    local c = p.Character
+    local tC = p.Team and T:FindFirstChild(p.Team.Name) and T[p.Team.Name].TeamColor.Color or Color3.new(1, 1, 1)
+    if c and c:FindFirstChild("HumanoidRootPart") then
+        if E and not c:FindFirstChild("Highlight") then
+            local highlight = Instance.new("Highlight", c)
+            highlight.Adornee = c
+            highlight.FillColor = tC
+            highlight.OutlineColor = Color3.new(1, 1, 1)
+        end
+
+        local rootPart = c:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local billboard = rootPart:FindFirstChild("BillboardGui") or Instance.new("BillboardGui", rootPart)
+            billboard.Adornee = rootPart
+            billboard.Size = UDim2.new(12, 0, 6, 0)
+            billboard.AlwaysOnTop = true
+
+            local label = billboard:FindFirstChild("InfoLabel") or Instance.new("TextLabel", billboard)
+            label.Name = "InfoLabel"
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.SourceSansBold
+            label.TextSize = 15
+            label.TextColor3 = Color3.new(1, 0, 0)
+            label.TextStrokeTransparency = 0
+            label.TextStrokeColor3 = Color3.new(0, 0, 0)
+
+            spawn(function()
+                while E and label.Parent do
+                    local text = ""
+                    if N then text = text .. "NAME: " .. tostring(p.Name) .. "\n" end
+                    if I then text = text .. "ITEM: " .. (p.Backpack:FindFirstChildWhichIsA("Tool") and p.Backpack:FindFirstChildWhichIsA("Tool").Name or "NONE") .. "\n" end
+                    if H then text = text .. "HEALTH: " .. tostring(math.floor(c:FindFirstChild("Humanoid") and c.Humanoid.Health or 0)) .. "\n" end
+                    if D then text = text .. "DISTANCE: " .. tostring(math.floor((L.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude)) .. "\n" end
+                    if A then text = text .. "ALIVE: " .. (c:FindFirstChild("Humanoid") and (c.Humanoid.Health > 0 and "YES" or "NO") or "UNKNOWN") .. "\n" end
+                    if V then text = text .. "SPEED: " .. tostring(math.floor(c:FindFirstChild("Humanoid") and c.Humanoid.WalkSpeed or 0)) .. "\n" end
+                    if F then text = text .. "JUMP POWER: " .. tostring(math.floor(c:FindFirstChild("Humanoid") and c.Humanoid.JumpPower or 0)) .. "\n" end
+                    if S then text = text .. "STATE: " .. (c:FindFirstChild("Humanoid") and (c.Humanoid.Sit and "SITTING" or c.Humanoid.Jump and "JUMPING") or "UNKNOWN") .. "\n" end
+                    label.Text = text:sub(1, -2)
+                    wait(1)
+                end
+            end)
+        end
+    end
+end
+
+local function rE(p)
+    for _, v in ipairs({"Highlight", "BillboardGui"}) do
+        local o = p.Character and p.Character:FindFirstChild(v)
+        if o then o:Destroy() end
+    end
+end
+
+local function monitorPlayers()
+    while E do
+        for _, p in ipairs(P:GetPlayers()) do
+            if p ~= L and p.Character then
+                cE(p)
+            end
+        end
+        wait(1)
+    end
+end
+
+for _, o in pairs({
+    {"ESP", false}, {"Names", false}, {"Items", false}, {"Health", false},
+    {"Distance", false}, {"Alive", false}, {"Speed", false}, {"Jump", false}, {"Sit/Jump State", false}
+}) do
+    PlayerSection2:AddToggle(o[1], o[2], function(s)
+        if o[1] == "ESP" then 
+            E = s
+            if E then
+                spawn(monitorPlayers)
+            end
+        end
+        if o[1] == "Names" then N = s end
+        if o[1] == "Items" then I = s end
+        if o[1] == "Health" then H = s end
+        if o[1] == "Distance" then D = s end
+        if o[1] == "Alive" then A = s end
+        if o[1] == "Speed" then V = s end
+        if o[1] == "Jump" then F = s end
+        if o[1] == "Sit/Jump State" then S = s end
+    end)
+end
