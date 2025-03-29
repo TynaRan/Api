@@ -27,6 +27,8 @@ Notification:Notify(
 local SettingsTab = Window:CreateTab("Setting")
 local PlayerSection = SettingsTab:CreateSector("Player", "left")
 local PlayerSection2 = SettingsTab:CreateSector("esp", "right")
+local Misc = Window:CreateTab("Misc")
+local Nigger = Misc:CreateSector("Misc", "left")
 local spinbotEnabled = false
 local loopEnabled = false
 local speedNormal = 16
