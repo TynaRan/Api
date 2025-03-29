@@ -433,60 +433,62 @@ PlayerSection:AddToggle("Auto Jump", false, function(state)
         end)
     end
 end)
-PlayerSection:AddTextbox("Detection Radius", nil, function(input)
-    DetectionRadius = tonumber(input) or 4
-end)
-
-PlayerSection:AddTextbox("Rotation Speed", nil, function(input)
-    RotationSpeed = tonumber(input) or 5
-end)
-
 PlayerSection:AddToggle("Target Strafe", false, function(state)
-    local Services = {
-        Players = game:GetService("Players"),
-        RunService = game:GetService("RunService")
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local settings = {
+        radius = 1.5,
+        speed = 5
     }
 
-    local LocalPlayer = Services.Players.LocalPlayer
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local RootPart = Character:WaitForChild("HumanoidRootPart")
+    local target = nil
+    local localPlayer = Players.LocalPlayer
+    local connection
 
-    local function FindClosestEnemy()
-        local closestEnemy = nil
-        local closestDistance = DetectionRadius
-
-        for _, player in ipairs(Services.Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
-                local enemyCharacter = player.Character
-                local enemyRootPart = enemyCharacter and enemyCharacter:FindFirstChild("HumanoidRootPart")
-
-                if enemyRootPart then
-                    local distance = (RootPart.Position - enemyRootPart.Position).Magnitude
-                    if distance <= closestDistance then
-                        closestDistance = distance
-                        closestEnemy = enemyRootPart
-                    end
+    local function getTarget()
+        local closest, shortestDistance = nil, 5
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer and player.Team ~= localPlayer.Team and player.Team and player.Team.Name == "Vampire" and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closest = player
                 end
             end
         end
-
-        return closestEnemy
+        return closest
     end
 
     if state then
-        Services.RunService.RenderStepped:Connect(function()
-            local Target = FindClosestEnemy()
-            if Target then
-                local characterCFrame = RootPart.CFrame
-                local targetCFrame = Target.CFrame
+        connection = RunService.RenderStepped:Connect(function()
+            if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+                target = getTarget()
+            end
 
-                local directionCFrame = CFrame.new(characterCFrame.Position, targetCFrame.Position)
-                local rotationAngle = math.rad(RotationSpeed)
-                local rotationCFrame = CFrame.Angles(0, rotationAngle, 0)
-
-                local strafePosition = characterCFrame.Position + (rotationCFrame:VectorToWorldSpace((directionCFrame.LookVector)) * DetectionRadius)
-                RootPart.CFrame = characterCFrame:Lerp(CFrame.new(strafePosition) * rotationCFrame, 0.1)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetPosition = target.Character.HumanoidRootPart.Position
+                local angle = tick() * settings.speed
+                local strafePosition = Vector3.new(
+                    targetPosition.X + math.cos(angle) * settings.radius,
+                    targetPosition.Y,
+                    targetPosition.Z + math.sin(angle) * settings.radius
+                )
+                localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(strafePosition, targetPosition)
             end
         end)
+    else
+        if connection then
+            connection:Disconnect()
+            connection = nil
+        end
     end
+end)
+
+PlayerSection:AddTextbox("Radius", 1.5, function(input)
+    settings.radius = tonumber(input) or settings.radius
+end)
+
+PlayerSection:AddTextbox("Speed", 5, function(input)
+    settings.speed = tonumber(input) or settings.speed
 end)
