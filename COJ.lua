@@ -491,7 +491,7 @@ local Services = {
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
-local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts") 
+local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
@@ -521,11 +521,11 @@ Services.RunService.RenderStepped:Connect(function()
         local ControlModule = require(PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
         local moveDirection = ControlModule:GetMoveVector()
 
-        local finalDirection = Vector3.zero
+        local adjustedDirection = Vector3.zero
         if moveDirection.Magnitude > 0 then
-            finalDirection = Vector3.new(moveDirection.X, moveDirection.Y, moveDirection.Z).Unit
+            adjustedDirection = Vector3.new(-moveDirection.Z, moveDirection.Y, moveDirection.X).Unit
         end
 
-        bodyVelocity.Velocity = finalDirection * fixedFlySpeed
+        bodyVelocity.Velocity = adjustedDirection * fixedFlySpeed
     end
 end)
