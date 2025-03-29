@@ -485,49 +485,32 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
         end)
     end
 end)
-local Services = {
-    Players = game:GetService("Players"),
-    RunService = game:GetService("RunService")
-}
+PlayerSection:AddToggle("Fly", false, function(S)
+    local G = {P = game:GetService("Players"), R = game:GetService("RunService")}
+    local L, M = G.P.LocalPlayer, require(L.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+    local R = Vector3.new(9e9, 9e9, 9e9)
 
-local LocalPlayer = Services.Players.LocalPlayer
-local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    if S then
+        local H = L.Character:WaitForChild("HumanoidRootPart")
+        local BV, BG = Instance.new("BodyVelocity", H), Instance.new("BodyGyro", H)
+        BV.Name, BV.MaxForce, BV.Velocity = "BV", R, Vector3.zero
+        BG.Name, BG.MaxTorque, BG.P, BG.D = "BG", R, 1000, 50
 
-local flyEnabled = false
-local bodyVelocity = nil
-local fixedFlySpeed = 50
-
-PlayerSection:AddToggle("Fly Mode", false, function(state)
-    flyEnabled = state
-
-    if state then
-        bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-        bodyVelocity.P = 1250
-        bodyVelocity.Velocity = Vector3.zero
-        bodyVelocity.Parent = HumanoidRootPart
+        G.R.RenderStepped:Connect(function()
+            if H:FindFirstChild("BV") and H:FindFirstChild("BG") then
+                BG.CFrame = workspace.CurrentCamera.CFrame
+                local D = M:GetMoveVector()
+                BV.Velocity = BV.Velocity
+                if D.X > 0 then BV.Velocity += workspace.CurrentCamera.CFrame.RightVector * (D.X * 1 * 50) end
+                if D.X < 0 then BV.Velocity += workspace.CurrentCamera.CFrame.RightVector * (D.X * 1 * 50) end
+                if D.Y > 0 then BV.Velocity += Vector3.new(0, D.Y * 1 * 50, 0) end
+                if D.Y < 0 then BV.Velocity -= Vector3.new(0, -D.Y * 1 * 50, 0) end
+                if D.Z > 0 then BV.Velocity -= workspace.CurrentCamera.CFrame.LookVector * (D.Z * 1 * 50) end
+                if D.Z < 0 then BV.Velocity -= workspace.CurrentCamera.CFrame.LookVector * (D.Z * 1 * 50) end
+            end
+        end)
     else
-        if bodyVelocity then
-            bodyVelocity:Destroy()
-            bodyVelocity = nil
-        end
-    end
-end)
-
-Services.RunService.RenderStepped:Connect(function()
-    if flyEnabled and bodyVelocity then
-        local ControlModule = require(PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
-        local moveDirection = ControlModule:GetMoveVector()
-
-        local adjustedDirection = Vector3.zero
-        if moveDirection.Magnitude > 0 then
-            adjustedDirection = (HumanoidRootPart.CFrame.LookVector * moveDirection.Z)
-                              + (HumanoidRootPart.CFrame.RightVector * moveDirection.X)
-                              + Vector3.new(0, moveDirection.Y, 0)
-        end
-
-        bodyVelocity.Velocity = adjustedDirection.Unit * fixedFlySpeed
+        local H = L.Character and L.Character:FindFirstChild("HumanoidRootPart")
+        if H then for _, N in ipairs({"BV", "BG"}) do local F = H:FindFirstChild(N) if F then F:Destroy() end end end
     end
 end)
