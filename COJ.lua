@@ -178,3 +178,47 @@ PlayerSection:AddToggle("Anti-Kick", false, function(state)
         disableAntiKick()
     end
 end)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local autoTeleportEnabled = false
+
+local function getNearestPlayer()
+    local nearestPlayer = nil
+    local nearestDistance = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
+            local targetCharacter = player.Character
+            local localCharacter = LocalPlayer.Character
+            if targetCharacter and localCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") and localCharacter:FindFirstChild("HumanoidRootPart") then
+                local distance = (localCharacter.HumanoidRootPart.Position - targetCharacter.HumanoidRootPart.Position).Magnitude
+                if distance < nearestDistance then
+                    nearestDistance = distance
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function autoTeleport()
+    while autoTeleportEnabled do
+        local targetPlayer = getNearestPlayer()
+        if targetPlayer then
+            local targetCharacter = targetPlayer.Character
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character:SetPrimaryPartCFrame(targetCharacter.HumanoidRootPart.CFrame)
+            end
+        end
+        wait(0.000001) 
+    end
+end
+
+PlayerSection:AddToggle("Auto TP (Different Team)", false, function(state)
+    autoTeleportEnabled = state
+    if autoTeleportEnabled then
+        task.spawn(autoTeleport)
+    end
+end)
