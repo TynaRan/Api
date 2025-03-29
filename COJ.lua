@@ -20,7 +20,7 @@ local platform = game:GetService("UserInputService").TouchEnabled
     and (game:GetService("UserInputService").KeyboardEnabled and "Android")
     or (game:GetService("UserInputService").MouseEnabled and "Windows" or "Mac")
 
-local Window = Library:CreateWindow("COJ 1.1 - " .. platform, Vector2.new(492, 598), Enum.KeyCode.RightControl)
+local Window = Library:CreateWindow("COJ 1.2 - " .. platform, Vector2.new(492, 598), Enum.KeyCode.RightControl)
 local startTime = os.clock()
 
 local sound = Instance.new("Sound", game.Workspace)
