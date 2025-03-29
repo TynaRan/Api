@@ -523,9 +523,11 @@ Services.RunService.RenderStepped:Connect(function()
 
         local adjustedDirection = Vector3.zero
         if moveDirection.Magnitude > 0 then
-            adjustedDirection = Vector3.new(-moveDirection.Z, moveDirection.Y, moveDirection.X).Unit
+            adjustedDirection = (HumanoidRootPart.CFrame.LookVector * moveDirection.Z)
+                              + (HumanoidRootPart.CFrame.RightVector * moveDirection.X)
+                              + Vector3.new(0, moveDirection.Y, 0)
         end
 
-        bodyVelocity.Velocity = adjustedDirection * fixedFlySpeed
+        bodyVelocity.Velocity = adjustedDirection.Unit * fixedFlySpeed
     end
 end)
