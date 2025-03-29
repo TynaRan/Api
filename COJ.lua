@@ -141,3 +141,40 @@ end)
 PlayerSection:AddButton("hitbox", function(nocallback)
     loadstring(game:HttpGet("https://github.com/Drop56796/CreepyEyeHub/blob/main/thr.lua?raw=true"))()
 end)
+local Players = game:GetService("Players")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local mt = getrawmetatable(game)
+local originalNamecall = mt.__namecall
+local antiKickEnabled = false
+
+setreadonly(mt, false)
+
+local function enableAntiKick()
+    if antiKickEnabled then return end
+    antiKickEnabled = true
+    mt.__namecall = function(self, ...)
+        local method = getnamecallmethod()
+        if self == LocalPlayer and method == "Kick" then
+            return nil
+        end
+        return originalNamecall(self, ...)
+    end
+end
+
+local function disableAntiKick()
+    if not antiKickEnabled then return end
+    antiKickEnabled = false
+    mt.__namecall = originalNamecall
+end
+
+setreadonly(mt, true)
+
+PlayerSection:AddToggle("Anti-Kick", false, function(state)
+    if state then
+        enableAntiKick()
+    else
+        disableAntiKick()
+    end
+end)
