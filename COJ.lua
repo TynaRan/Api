@@ -2,10 +2,22 @@
 --Creator:Mr-fes
 --Team:COJ
 --Script source↓↓↓
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local originalProperties = {}
+for _, part in ipairs(character:GetDescendants()) do
+    if part:IsA("BasePart") then
+        originalProperties[part] = {
+            Transparency = part.Transparency,
+            Material = part.Material,
+            Color = part.Color
+        }
+    end
+end
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/cat"))()
 local platform = game:GetService("UserInputService").TouchEnabled 
-    and (game:GetService("UserInputService").KeyboardEnabled and "Android" or "IOS")
+    and (game:GetService("UserInputService").KeyboardEnabled and "Android")
     or (game:GetService("UserInputService").MouseEnabled and "Windows" or "Mac")
 
 local Window = Library:CreateWindow("COJ 1.1 - " .. platform, Vector2.new(492, 598), Enum.KeyCode.RightControl)
@@ -28,7 +40,7 @@ local SettingsTab = Window:CreateTab("Setting")
 local PlayerSection = SettingsTab:CreateSector("Player", "left")
 local PlayerSection2 = SettingsTab:CreateSector("esp", "right")
 local Misc = Window:CreateTab("Misc")
-local Nigger = Misc:CreateSector("Misc", "left")
+local Misc = Misc:CreateSector("Misc", "left")
 local spinbotEnabled = false
 local loopEnabled = false
 local speedNormal = 16
@@ -329,3 +341,56 @@ for _, o in pairs({
         if o[1] == "Sit/Jump State" then S = s end
     end)
 end
+
+Misc:AddToggle("Dance Walk", false, function(state)
+    danceWalkEnabled = state
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local animator = humanoid:FindFirstChild("Animator") or Instance.new("Animator", humanoid)
+            if state then
+                local danceAnimation = character:FindFirstChild("DanceAnimation") or Instance.new("Animation", character)
+                danceAnimation.Name = "DanceAnimation"
+                danceAnimation.AnimationId = "rbxassetid://507771019"
+                local danceTrack = animator:LoadAnimation(danceAnimation)
+                if not danceTrack.IsPlaying then
+                    danceTrack.Looped = true
+                    danceTrack:Play()
+                end
+            else
+                for _, part in ipairs(character:GetChildren()) do
+                    if part:IsA("Animation") and part.Name == "DanceAnimation" then
+                        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                            if track.Animation.AnimationId == "rbxassetid://507771019" then
+                                track:Stop()
+                            end
+                        end
+                        part:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+PlayerSection:AddToggle("GlowEffect", false, function(state)
+    if state then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0.9
+                part.Material = Enum.Material.ForceField
+                part.Color = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    else
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and originalProperties[part] then
+                part.Transparency = originalProperties[part].Transparency
+                part.Material = originalProperties[part].Material
+                part.Color = originalProperties[part].Color
+            end
+        end
+    end
+end)
