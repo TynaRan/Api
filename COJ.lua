@@ -487,11 +487,11 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
 end)
 local Services = {
     Players = game:GetService("Players"),
-    RunService = game:GetService("RunService"),
-    PlayerScripts = Services.Players.LocalPlayer:WaitForChild("PlayerScripts")
+    RunService = game:GetService("RunService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
+local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts") 
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
@@ -499,7 +499,7 @@ local flyEnabled = false
 local bodyVelocity = nil
 local fixedFlySpeed = 50
 
-PlayerSection:AddToggle("Fly", false, function(state)
+PlayerSection:AddToggle("Fly Mode", false, function(state)
     flyEnabled = state
 
     if state then
@@ -518,7 +518,7 @@ end)
 
 Services.RunService.RenderStepped:Connect(function()
     if flyEnabled and bodyVelocity then
-        local ControlModule = require(Services.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+        local ControlModule = require(PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
         local moveDirection = ControlModule:GetMoveVector()
 
         local finalDirection = Vector3.zero
