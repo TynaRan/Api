@@ -374,16 +374,23 @@ Misc:AddToggle("Dance Walk", false, function(state)
         end
     end
 end)
-
 PlayerSection:AddToggle("GlowEffect", false, function(state)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
     if state then
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0.9
-                part.Material = Enum.Material.ForceField
-                part.Color = Color3.fromRGB(255, 255, 255)
+        task.spawn(function()
+            while true do
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 0.9
+                        part.Material = Enum.Material.ForceField
+                        part.Color = Color3.fromRGB(255, 255, 255)
+                    end
+                end
+                task.wait(0.1)
             end
-        end
+        end)
     else
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") and originalProperties[part] then
@@ -394,6 +401,7 @@ PlayerSection:AddToggle("GlowEffect", false, function(state)
         end
     end
 end)
+
 PlayerSection:AddToggle("Auto Jump", false, function(state)
     local Services = {
         Players = game:GetService("Players"),
@@ -425,13 +433,12 @@ PlayerSection:AddToggle("Auto Jump", false, function(state)
         end)
     end
 end)
-
 PlayerSection:AddTextbox("Detection Radius", nil, function(input)
     DetectionRadius = tonumber(input) or 4
 end)
 
 PlayerSection:AddTextbox("Rotation Speed", nil, function(input)
-    RotationSpeed = tonumber(input) or 5 
+    RotationSpeed = tonumber(input) or 5
 end)
 
 PlayerSection:AddToggle("Target Strafe", false, function(state)
@@ -442,7 +449,7 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
 
     local LocalPlayer = Services.Players.LocalPlayer
     local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local Humanoid = Character:WaitForChild("Humanoid")
+    local RootPart = Character:WaitForChild("HumanoidRootPart")
 
     local function FindClosestEnemy()
         local closestEnemy = nil
@@ -452,10 +459,9 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
             if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
                 local enemyCharacter = player.Character
                 local enemyRootPart = enemyCharacter and enemyCharacter:FindFirstChild("HumanoidRootPart")
-                local localRootPart = Character:FindFirstChild("HumanoidRootPart")
 
-                if enemyRootPart and localRootPart then
-                    local distance = (localRootPart.Position - enemyRootPart.Position).Magnitude
+                if enemyRootPart then
+                    local distance = (RootPart.Position - enemyRootPart.Position).Magnitude
                     if distance <= closestDistance then
                         closestDistance = distance
                         closestEnemy = enemyRootPart
@@ -471,46 +477,16 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
         Services.RunService.RenderStepped:Connect(function()
             local Target = FindClosestEnemy()
             if Target then
-                local characterPosition = Character.PrimaryPart.Position
-                local targetPosition = Target.Position
-                local direction = (targetPosition - characterPosition).Unit
-                local angle = math.rad(RotationSpeed)
-                local rotateDirection = Vector3.new(
-                    direction.X * math.cos(angle) - direction.Z * math.sin(angle),
-                    0,
-                    direction.X * math.sin(angle) + direction.Z * math.cos(angle)
-                )
-                Humanoid:Move(rotateDirection, true)
+                local characterCFrame = RootPart.CFrame
+                local targetCFrame = Target.CFrame
+
+                local directionCFrame = CFrame.new(characterCFrame.Position, targetCFrame.Position)
+                local rotationAngle = math.rad(RotationSpeed)
+                local rotationCFrame = CFrame.Angles(0, rotationAngle, 0)
+
+                local strafePosition = characterCFrame.Position + (rotationCFrame:VectorToWorldSpace((directionCFrame.LookVector)) * DetectionRadius)
+                RootPart.CFrame = characterCFrame:Lerp(CFrame.new(strafePosition) * rotationCFrame, 0.1)
             end
         end)
-    end
-end)
-PlayerSection:AddToggle("Fly", false, function(S)
-    local G = {P = game:GetService("Players"), R = game:GetService("RunService")}
-    local L, M = G.P.LocalPlayer, require(L.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
-    local R = Vector3.new(9e9, 9e9, 9e9)
-
-    if S then
-        local H = L.Character:WaitForChild("HumanoidRootPart")
-        local BV, BG = Instance.new("BodyVelocity", H), Instance.new("BodyGyro", H)
-        BV.Name, BV.MaxForce, BV.Velocity = "BV", R, Vector3.zero
-        BG.Name, BG.MaxTorque, BG.P, BG.D = "BG", R, 1000, 50
-
-        G.R.RenderStepped:Connect(function()
-            if H:FindFirstChild("BV") and H:FindFirstChild("BG") then
-                BG.CFrame = workspace.CurrentCamera.CFrame
-                local D = M:GetMoveVector()
-                BV.Velocity = BV.Velocity
-                if D.X > 0 then BV.Velocity += workspace.CurrentCamera.CFrame.RightVector * (D.X * 1 * 50) end
-                if D.X < 0 then BV.Velocity += workspace.CurrentCamera.CFrame.RightVector * (D.X * 1 * 50) end
-                if D.Y > 0 then BV.Velocity += Vector3.new(0, D.Y * 1 * 50, 0) end
-                if D.Y < 0 then BV.Velocity -= Vector3.new(0, -D.Y * 1 * 50, 0) end
-                if D.Z > 0 then BV.Velocity -= workspace.CurrentCamera.CFrame.LookVector * (D.Z * 1 * 50) end
-                if D.Z < 0 then BV.Velocity -= workspace.CurrentCamera.CFrame.LookVector * (D.Z * 1 * 50) end
-            end
-        end)
-    else
-        local H = L.Character and L.Character:FindFirstChild("HumanoidRootPart")
-        if H then for _, N in ipairs({"BV", "BG"}) do local F = H:FindFirstChild(N) if F then F:Destroy() end end end
     end
 end)
