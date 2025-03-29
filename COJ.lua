@@ -83,21 +83,18 @@ HumanAutomaticSection:AddToggle("Silent Killer", false, function(state)
     while silentKillerEnabled do
         local Players = game:GetService("Players")
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
         local function getClosestEnemy(player)
-            local closestPlayer = nil
-            local shortestDistance = math.huge
+            local closestPlayer, shortestDistance = nil, math.huge
             for _, otherPlayer in ipairs(Players:GetPlayers()) do
                 if otherPlayer ~= player and otherPlayer.Team ~= player.Team then
-                    local character = otherPlayer.Character
-                    local playerCharacter = player.Character
+                    local character, playerCharacter = otherPlayer.Character, player.Character
                     if character and playerCharacter then
-                        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                        local playerHumanoidRootPart = playerCharacter:FindFirstChild("HumanoidRootPart")
+                        local humanoidRootPart, playerHumanoidRootPart = character:FindFirstChild("HumanoidRootPart"), playerCharacter:FindFirstChild("HumanoidRootPart")
                         if humanoidRootPart and playerHumanoidRootPart then
                             local distance = (humanoidRootPart.Position - playerHumanoidRootPart.Position).Magnitude
                             if distance < shortestDistance then
-                                shortestDistance = distance
-                                closestPlayer = otherPlayer
+                                shortestDistance, closestPlayer = distance, otherPlayer
                             end
                         end
                     end
@@ -109,19 +106,55 @@ HumanAutomaticSection:AddToggle("Silent Killer", false, function(state)
         local player = Players.LocalPlayer
         local closestEnemy = getClosestEnemy(player)
         if closestEnemy then
-            local args = {
-                [1] = "Kill",
-                [2] = {
-                    ["Target"] = closestEnemy
-                }
-            }
+            local args = { [1] = "Kill", [2] = { ["Target"] = closestEnemy } }
             local combatEvent = ReplicatedStorage:FindFirstChild("RemoteEvents") and ReplicatedStorage.RemoteEvents:FindFirstChild("CombatEvent")
             if combatEvent then
                 combatEvent:FireServer(unpack(args))
+                if killNotificationEnabled then
+                    if not closestEnemy.Character or not closestEnemy.Character:FindFirstChild("Humanoid") or closestEnemy.Character.Humanoid.Health = 0 then
+                        local sound = Instance.new("Sound", game.Workspace)
+                        sound.SoundId = "rbxassetid://" .. soundId
+                        sound:Play()
+
+                        local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
+                        local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
+                        Notification:Notify(
+                            {Title = "Target Hud", Description = closestEnemy.Name .. " " .. killSuffix},
+                            {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 5, Type = "image"},
+                            {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(255, 84, 84)}
+                        )
+                    end
+                end
             end
         end
         wait(0.00005)
     end
+end)
+
+HumanAutomaticSection:AddToggle("Kill Notification", false, function(state)
+    killNotificationEnabled = state
+end)
+
+HumanAutomaticSection:AddTextbox("Kill Suffix", "has been killed", function(state)
+    killSuffix = state
+    local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
+    local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
+    Notification:Notify(
+        {Title = "Customization Complete", Description = "Kill suffix updated to: " .. killSuffix},
+        {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 3, Type = "image"},
+        {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(84, 255, 84)}
+    )
+end)
+
+HumanAutomaticSection:AddTextbox("Kill Sound ID", "4590657391", function(state)
+    soundId = state
+    local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
+    local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
+    Notification:Notify(
+        {Title = "Customization Complete", Description = "Kill sound ID updated to: " .. soundId},
+        {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 3, Type = "image"},
+        {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(84, 255, 84)}
+    )
 end)
 PlayerSection:AddToggle("Spinbot", false, function(state)
     spinbotEnabled = state
