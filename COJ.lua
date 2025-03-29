@@ -449,7 +449,13 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
     local function getTarget()
         local closest, shortestDistance = nil, 5
         for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= localPlayer and player.Team ~= localPlayer.Team and player.Team and player.Team.Name == "Vampire" and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if player ~= localPlayer 
+            and player.Team ~= localPlayer.Team 
+            and player.Team 
+            and player.Team.Name == "Vampire" 
+            and player.Character 
+            and player.Character:FindFirstChild("HumanoidRootPart")
+            and player.Character:FindFirstChild("Humanoid").Health > 0 then
                 local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                 if distance < shortestDistance then
                     shortestDistance = distance
@@ -462,7 +468,7 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
 
     if state then
         connection = RunService.RenderStepped:Connect(function()
-            if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+            if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") or target.Character:FindFirstChild("Humanoid").Health <= 0 then
                 target = getTarget()
             end
 
