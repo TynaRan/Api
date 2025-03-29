@@ -394,3 +394,94 @@ PlayerSection:AddToggle("GlowEffect", false, function(state)
         end
     end
 end)
+PlayerSection:AddToggle("Auto Jump", false, function(state)
+    local Services = {
+        Players = game:GetService("Players"),
+        RunService = game:GetService("RunService")
+    }
+
+    local LocalPlayer = Services.Players.LocalPlayer
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    local Settings = {
+        JumpCooldown = 0.3
+    }
+
+    local CanJump = true
+
+    function AutoJump()
+        if state and Humanoid.FloorMaterial ~= Enum.Material.Air and CanJump then
+            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            CanJump = false
+            wait(Settings.JumpCooldown)
+            CanJump = true
+        end
+    end
+
+    if state then
+        Services.RunService.RenderStepped:Connect(function()
+            AutoJump()
+        end)
+    end
+end)
+
+PlayerSection:AddTextbox("Detection Radius", nil, function(input)
+    DetectionRadius = tonumber(input) or 4
+end)
+
+PlayerSection:AddTextbox("Rotation Speed", nil, function(input)
+    RotationSpeed = tonumber(input) or 5 
+end)
+
+PlayerSection:AddToggle("Target Strafe", false, function(state)
+    local Services = {
+        Players = game:GetService("Players"),
+        RunService = game:GetService("RunService")
+    }
+
+    local LocalPlayer = Services.Players.LocalPlayer
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    local function FindClosestEnemy()
+        local closestEnemy = nil
+        local closestDistance = DetectionRadius
+
+        for _, player in ipairs(Services.Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
+                local enemyCharacter = player.Character
+                local enemyRootPart = enemyCharacter and enemyCharacter:FindFirstChild("HumanoidRootPart")
+                local localRootPart = Character:FindFirstChild("HumanoidRootPart")
+
+                if enemyRootPart and localRootPart then
+                    local distance = (localRootPart.Position - enemyRootPart.Position).Magnitude
+                    if distance <= closestDistance then
+                        closestDistance = distance
+                        closestEnemy = enemyRootPart
+                    end
+                end
+            end
+        end
+
+        return closestEnemy
+    end
+
+    if state then
+        Services.RunService.RenderStepped:Connect(function()
+            local Target = FindClosestEnemy()
+            if Target then
+                local characterPosition = Character.PrimaryPart.Position
+                local targetPosition = Target.Position
+                local direction = (targetPosition - characterPosition).Unit
+                local angle = math.rad(RotationSpeed)
+                local rotateDirection = Vector3.new(
+                    direction.X * math.cos(angle) - direction.Z * math.sin(angle),
+                    0,
+                    direction.X * math.sin(angle) + direction.Z * math.cos(angle)
+                )
+                Humanoid:Move(rotateDirection, true)
+            end
+        end)
+    end
+end)
