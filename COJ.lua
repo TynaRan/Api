@@ -7,6 +7,7 @@ local Window = Library:CreateWindow("COJ 1.0", Vector2.new(492, 598), Enum.KeyCo
 
 local SettingsTab = Window:CreateTab("Setting")
 local PlayerSection = SettingsTab:CreateSector("Player", "left")
+local PlayerSection2 = SettingsTab:CreateSector("ESP", "right")
 local spinbotEnabled = false
 local loopEnabled = false
 local speedNormal = 16
@@ -141,7 +142,6 @@ PlayerSection:AddButton("hitbox", function(nocallback)
     loadstring(game:HttpGet("https://github.com/Drop56796/CreepyEyeHub/blob/main/thr.lua?raw=true"))()
 end)
 local Players = game:GetService("Players")
-local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local mt = getrawmetatable(game)
@@ -177,9 +177,6 @@ PlayerSection:AddToggle("Anti-Kick", false, function(state)
         disableAntiKick()
     end
 end)
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local autoTeleportEnabled = false
 
 local function getNearestPlayer()
@@ -221,3 +218,48 @@ PlayerSection:AddToggle("Auto TP (Different Team)", false, function(state)
         task.spawn(autoTeleport)
     end
 end)
+local T, P, L = game:GetService("Teams"), game:GetService("Players"), game.Players.LocalPlayer
+local E, N, I, H, D, A, V, F, S, J = false, false, false, false, false, false, false, false, false, false
+
+local function cE(p)
+    local c, tC = p.Character, p.Team and T:FindFirstChild(p.Team.Name) and T[p.Team.Name].TeamColor.Color or Color3.new(1, 1, 1)
+    if c then
+        if not c:FindFirstChild("Highlight") then Instance.new("Highlight", c).FillColor, Instance.new("BillboardGui", c).Adornee = tC, c:FindFirstChild("HumanoidRootPart") end
+        local h = c:FindFirstChild("Humanoid")
+        local a = h and h.Health > 0
+        local st = h and (h.Sit and "Sitting" or h.Jump and "Jumping" or h.FloorMaterial ~= Enum.Material.Air and "Standing" or "Idle")
+        Instance.new("TextLabel", c:FindFirstChild("BillboardGui")).Text =
+            (N and p.Name or "") ..
+            (H and ("\nHP: " .. math.floor(h and h.Health or 0)) or "") ..
+            (D and ("\nDist: " .. math.floor((L.Character.HumanoidRootPart.Position - c.HumanoidRootPart.Position).Magnitude)) or "") ..
+            (A and ("\nAlive: " .. (a and "Yes" or "No")) or "") ..
+            (V and ("\nSpeed: " .. math.floor(h and h.WalkSpeed or 0)) or "") ..
+            (F and ("\nJump: " .. math.floor(h and h.JumpPower or 0)) or "") ..
+            (S and ("\nState: " .. (st or "Unknown")) or "")
+        if I then
+            Instance.new("TextLabel", Instance.new("BillboardGui", c)).Text =
+                "Item: " .. (p.Backpack:FindFirstChildWhichIsA("Tool") and p.Backpack:FindFirstChildWhichIsA("Tool").Name or "None")
+        end
+    end
+end
+
+local function rE(p) for _, v in ipairs({"Highlight", "BillboardGui"}) do local o = p.Character and p.Character:FindFirstChild(v) if o then o:Destroy() end end end
+
+P.PlayerAdded:Connect(function(p) p.CharacterAdded:Connect(function() E and cE(p) end) end)
+P.PlayerRemoving:Connect(rE)
+
+local function uE()
+    for _, p in ipairs(P:GetPlayers()) do
+        if p ~= L then E and cE(p) or rE(p) end
+    end
+end
+
+for _, o in pairs({
+    {"ESP", false}, {"Names", false}, {"Items", false}, {"Health", false},
+    {"Distance", false}, {"Alive", false}, {"Speed", false}, {"Jump", false}, {"Sit/Jump State", false}
+}) do
+    PlayerSection2:AddToggle(o[1], o[2], function(s)
+        _G[o[1]:lower():gsub("/", "")] = s
+        uE()
+    end)
+end
