@@ -42,53 +42,35 @@ local PlayerSection2 = SettingsTab:CreateSector("esp", "right")
 local Misc = Window:CreateTab("Misc")
 local Misc = Misc:CreateSector("Misc", "left")
 local spinbotEnabled = false
-local Services = {
-    Players = game:GetService("Players"),
-    RunService = game:GetService("RunService")
-}
-
-local LocalPlayer = Services.Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-
+local loopEnabled = false
 local speedNormal = 16
 local fovNormal = 70
-local moveEnabled = false
-local loopEnabled = false
-local lastPosition = HumanoidRootPart.Position
 
-PlayerSection:AddSlider("Speed", 16, 10, 100, 1, function(value)
+PlayerSection:AddSlider("Speed Normal", 16, 10, 100, 1, function(value)
     speedNormal = value
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = speedNormal
+    end
 end)
 
-PlayerSection:AddSlider("FOV", 70, 40, 120, 1, function(value)
+PlayerSection:AddSlider("FOV Normal", 70, 40, 120, 1, function(value)
     fovNormal = value
+    workspace.CurrentCamera.FieldOfView = fovNormal
 end)
 
-PlayerSection:AddToggle("Move Mode(Walk LOOP)", false, function(state)
-    moveEnabled = state
-end)
-
-PlayerSection:AddToggle("FOV Mode(FOV LOOP)", false, function(state)
+PlayerSection:AddToggle("Loop Mode", false, function(state)
     loopEnabled = state
     while loopEnabled do
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.WalkSpeed = speedNormal
+        end
         workspace.CurrentCamera.FieldOfView = fovNormal
         wait(0.1)
     end
-end)
-
-Services.RunService.RenderStepped:Connect(function()
-    local currentPosition = HumanoidRootPart.Position
-    local positionDifference = (currentPosition - lastPosition).Magnitude
-
-    if positionDifference > 0 then
-        if moveEnabled then
-            local moveDirection = (currentPosition - lastPosition).Unit
-            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + moveDirection * speedNormal * 0.1
-        end
-    end
-
-    lastPosition = currentPosition
 end)
 
 local AutomaticTab = Window:CreateTab("Human Automatic")
