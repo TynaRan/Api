@@ -703,26 +703,3 @@ PlayerSection:AddToggle("NoClip", false, function(state)
         end
     end
 end)
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-
-PlayerSection:AddToggle("Click TP", false, function(state)
-    local clickTpEnabled = state
-
-    if clickTpEnabled then
-        mouse.Button1Down:Connect(function()
-            if clickTpEnabled then
-                local targetPosition = mouse.Hit.Position -- mouse
-                local character = player.Character or player.CharacterAdded:Wait()
-                if character then
-                    -- get
-                    local rootPart = character:FindFirstChild("HumanoidRootPart")
-                    if rootPart then
-                        local offset = rootPart.Position - character:GetModelCFrame().Position
-                        character:MoveTo(targetPosition + offset)
-                    end
-                end
-            end
-        end)
-    end
-end)
