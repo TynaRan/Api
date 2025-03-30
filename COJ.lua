@@ -251,9 +251,8 @@ PlayerSection:AddToggle("Auto TP (Different Team)", false, function(state)
         task.spawn(autoTeleport)
     end
 end)
-
 local T, P, L = game:GetService("Teams"), game:GetService("Players"), game.Players.LocalPlayer
-local E, N, I, H, D, A, V, F, S, J = false, false, false, false, false, false, false, false, false, false
+local E, N, I, H, D, A, V, F, S, J, TLoop = false, false, false, false, false, false, false, false, false, false, false
 
 local function cE(p)
     local c = p.Character
@@ -320,15 +319,44 @@ local function monitorPlayers()
     end
 end
 
+local function monitorTeamChanges()
+    while TLoop do
+        for _, p in ipairs(P:GetPlayers()) do
+            if p ~= L and p.Character then
+                local highlight = p.Character:FindFirstChild("Highlight")
+                if highlight then
+                    local tC = p.Team and T:FindFirstChild(p.Team.Name) and T[p.Team.Name].TeamColor.Color or Color3.new(1, 1, 1)
+                    highlight.FillColor = tC
+                end
+            end
+        end
+        wait(1)
+    end
+end
+
+P.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        if E then
+            cE(p)
+        end
+    end)
+end)
+
 for _, o in pairs({
     {"ESP", false}, {"Names", false}, {"Items", false}, {"Health", false},
-    {"Distance", false}, {"Alive", false}, {"Speed", false}, {"Jump", false}, {"Sit/Jump State", false}
+    {"Distance", false}, {"Alive", false}, {"Speed", false}, {"Jump", false}, {"Sit/Jump State", false}, {"Loop Team", false}
 }) do
     PlayerSection2:AddToggle(o[1], o[2], function(s)
         if o[1] == "ESP" then 
             E = s
             if E then
                 spawn(monitorPlayers)
+            end
+        end
+        if o[1] == "Loop Team" then 
+            TLoop = s
+            if TLoop then
+                spawn(monitorTeamChanges)
             end
         end
         if o[1] == "Names" then N = s end
@@ -444,7 +472,10 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
 
     local target = nil
     local localPlayer = Players.LocalPlayer
-    local connection
+
+    if not localPlayer:GetAttribute("TargetStrafeActive") then
+        localPlayer:SetAttribute("TargetStrafeActive", false)
+    end
 
     local function getTarget()
         local closest, shortestDistance = nil, 5
@@ -467,7 +498,8 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
     end
 
     if state then
-        connection = RunService.RenderStepped:Connect(function()
+        localPlayer:SetAttribute("TargetStrafeActive", true)
+        RunService:BindToRenderStep("TargetStrafe", Enum.RenderPriority.Character.Value, function()
             if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") or target.Character:FindFirstChild("Humanoid").Health <= 0 then
                 target = getTarget()
             end
@@ -484,10 +516,9 @@ PlayerSection:AddToggle("Target Strafe", false, function(state)
             end
         end)
     else
-        if connection then
-            connection:Disconnect()
-            connection = nil
-        end
+        localPlayer:SetAttribute("TargetStrafeActive", false)
+        RunService:UnbindFromRenderStep("TargetStrafe")
+        target = nil
     end
 end)
 
