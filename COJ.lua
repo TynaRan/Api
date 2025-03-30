@@ -14,6 +14,17 @@ for _, part in ipairs(character:GetDescendants()) do
         }
     end
 end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+if LocalPlayer and LocalPlayer.Character then
+    for _, descendant in pairs(LocalPlayer.Character:GetDescendants()) do
+        if descendant:IsA("BasePart") and descendant.Name == "Hitbox" then
+            descendant:Destroy()
+        end
+    end
+end
+
 local notify, guiService, tweenService, notificationHolder, notifications, padding =
     {}, game:GetService("CoreGui"), game:GetService("TweenService"), nil, {}, 10
 
@@ -430,33 +441,53 @@ for _, o in pairs({
     end)
 end
 
+local danceAnimationId = "rbxassetid://507771019"
+
+Misc:AddTextbox("Dance Animation ID", danceAnimationId, function(value)
+    danceAnimationId = value
+end)
+
 Misc:AddToggle("Dance Walk", false, function(state)
     danceWalkEnabled = state
     local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            local animator = humanoid:FindFirstChild("Animator") or Instance.new("Animator", humanoid)
-            if state then
-                local danceAnimation = character:FindFirstChild("DanceAnimation") or Instance.new("Animation", character)
-                danceAnimation.Name = "DanceAnimation"
-                danceAnimation.AnimationId = "rbxassetid://507771019"
-                local danceTrack = animator:LoadAnimation(danceAnimation)
-                if not danceTrack.IsPlaying then
-                    danceTrack.Looped = true
-                    danceTrack:Play()
-                end
-            else
-                for _, part in ipairs(character:GetChildren()) do
-                    if part:IsA("Animation") and part.Name == "DanceAnimation" then
-                        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                            if track.Animation.AnimationId == "rbxassetid://507771019" then
-                                track:Stop()
-                            end
+    local function setupDanceWalk()
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local animator = humanoid:FindFirstChild("Animator") or Instance.new("Animator", humanoid)
+
+        if danceWalkEnabled then
+            local danceAnimation = character:FindFirstChild("DanceAnimation") or Instance.new("Animation", character)
+            danceAnimation.Name = "DanceAnimation"
+            danceAnimation.AnimationId = danceAnimationId
+            local danceTrack = animator:LoadAnimation(danceAnimation)
+            danceTrack.Looped = true
+            danceTrack:Play()
+        end
+    end
+
+    if state then
+        player.CharacterAdded:Connect(function()
+            task.wait(1.399) 
+            setupDanceWalk()
+        end)
+        setupDanceWalk()
+    else
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                local animator = humanoid:FindFirstChild("Animator")
+                if animator then
+                    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                        if track.Animation.AnimationId == danceAnimationId then
+                            track:Stop()
                         end
-                        part:Destroy()
                     end
+                end
+            end
+            for _, part in ipairs(character:GetChildren()) do
+                if part:IsA("Animation") and part.Name == "DanceAnimation" then
+                    part:Destroy()
                 end
             end
         end
@@ -464,22 +495,18 @@ Misc:AddToggle("Dance Walk", false, function(state)
 end)
 PlayerSection:AddToggle("GlowEffect", false, function(state)
     local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
 
-    if state then
-        task.spawn(function()
-            while true do
-                for _, part in ipairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = 0.9
-                        part.Material = Enum.Material.ForceField
-                        part.Color = Color3.fromRGB(255, 255, 255)
-                    end
-                end
-                task.wait(0.1)
+    local function applyGlow(character)
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0.9
+                part.Material = Enum.Material.ForceField
+                part.Color = Color3.fromRGB(255, 255, 255)
             end
-        end)
-    else
+        end
+    end
+
+    local function resetGlow(character)
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") and originalProperties[part] then
                 part.Transparency = originalProperties[part].Transparency
@@ -488,8 +515,21 @@ PlayerSection:AddToggle("GlowEffect", false, function(state)
             end
         end
     end
-end)
 
+    if state then
+        player.CharacterAdded:Connect(function(character)
+            task.wait(1) 
+            applyGlow(character)
+        end)
+        local character = player.Character or player.CharacterAdded:Wait()
+        applyGlow(character)
+    else
+        local character = player.Character
+        if character then
+            resetGlow(character)
+        end
+    end
+end)
 PlayerSection:AddToggle("Auto Jump", false, function(state)
     local Services = {
         Players = game:GetService("Players"),
