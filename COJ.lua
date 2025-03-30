@@ -498,3 +498,34 @@ end)
 PlayerSection:AddTextbox("Speed", 5, function(input)
     settings.speed = tonumber(input) or settings.speed
 end)
+Misc:AddButton("serverhop", function(nocallback)
+    local HttpService = game:GetService("HttpService")
+    local TeleportService = game:GetService("TeleportService")
+    local currentPlaceId = game.PlaceId
+    local currentJobId = game.JobId
+
+    
+    local serverListResponse = syn and syn.request or request
+    if serverListResponse then
+        local response = serverListResponse({
+            Url = "https://games.roblox.com/v1/games/" .. currentPlaceId .. "/servers/Public?limit=100",
+            Method = "GET"
+        })
+
+        if response.StatusCode == 200 then
+            local servers = HttpService:JSONDecode(response.Body)
+            for _, server in pairs(servers.data) do
+                if server.playing < server.maxPlayers and server.id ~= currentJobId then
+                    print("Hopping to server: " .. server.id)
+                    TeleportService:TeleportToPlaceInstance(currentPlaceId, server.id)
+                    return
+                end
+            end
+            print("No available servers found.")
+        else
+            print("Failed to fetch server list. HTTP Error: " .. response.StatusCode)
+        end
+    else
+        print("syn.request or request is not supported")
+    end
+end)
