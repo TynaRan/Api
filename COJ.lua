@@ -495,38 +495,28 @@ Misc:AddToggle("Dance Walk", false, function(state)
 end)
 PlayerSection:AddToggle("GlowEffect", false, function(state)
     local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
 
-    local function applyGlow(character)
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0.9
-                part.Material = Enum.Material.ForceField
-                part.Color = Color3.fromRGB(255, 255, 255)
+    if state then
+        task.spawn(function()
+            while true do
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 0.9
+                        part.Material = Enum.Material.ForceField
+                        part.Color = Color3.fromRGB(255, 255, 255)
+                    end
+                end
+                task.wait(0.1)
             end
-        end
-    end
-
-    local function resetGlow(character)
+        end)
+    else
         for _, part in ipairs(character:GetDescendants()) do
             if part:IsA("BasePart") and originalProperties[part] then
                 part.Transparency = originalProperties[part].Transparency
                 part.Material = originalProperties[part].Material
                 part.Color = originalProperties[part].Color
             end
-        end
-    end
-
-    if state then
-        player.CharacterAdded:Connect(function(character)
-            task.wait(1) 
-            applyGlow(character)
-        end)
-        local character = player.Character or player.CharacterAdded:Wait()
-        applyGlow(character)
-    else
-        local character = player.Character
-        if character then
-            resetGlow(character)
         end
     end
 end)
@@ -669,108 +659,10 @@ Misc:AddTextbox("Music ID", "", function(id)
     sound:Play()
 end)
 
-local clickTpEnabled = false
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-local userInputService = game:GetService("UserInputService")
-
-PlayerSection:AddToggle("Click TP", false, function(state)
-    clickTpEnabled = state
-
-    if clickTpEnabled then
-        mouse.Button1Down:Connect(function()
-            if clickTpEnabled then
-                local target = mouse.Hit
-                if target then
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local primaryPart = character.PrimaryPart or character:WaitForChild("HumanoidRootPart")
-                    primaryPart.Position = target.Position
-                end
-            end
-        end)
-
-        userInputService.TouchTap:Connect(function(touchPositions)
-            if clickTpEnabled then
-                local touch = touchPositions[1]
-                if touch then
-                    local ray = workspace:FindPartOnRayWithIgnoreList(workspace:Raycast(touch.Position, Vector3.new(0, -10, 0)))
-                    if ray then
-                        local character = player.Character or player.CharacterAdded:Wait()
-                        local primaryPart = character.PrimaryPart or character:WaitForChild("HumanoidRootPart")
-                        primaryPart.Position = ray.Position
-                    end
-                end
-            end
-        end)
-    end
-end)
-
-local spiderEnabled = false
-local player = game.Players.LocalPlayer
-local runService = game:GetService("RunService")
-
-PlayerSection:AddToggle("Spider", false, function(state)
-    spiderEnabled = state
-
-    if spiderEnabled then
-        local function climbWalls()
-            if player.Character and player.Character:FindFirstChild("Humanoid") then
-                local character = player.Character
-                local humanoid = character:FindFirstChild("Humanoid")
-                humanoid.PlatformStand = true
-
-                local touchingWall = false
-                for _, part in ipairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        local touchingParts = part:GetTouchingParts()
-                        for _, surface in ipairs(touchingParts) do
-                            if surface:IsA("BasePart") and not surface:IsDescendantOf(character) then
-                                touchingWall = true
-                                local surfaceNormal = surface.CFrame:VectorToWorldSpace(Vector3.new(0, 1, 0)).Unit
-                                local moveDirection = humanoid.MoveDirection
-
-                                local climbDirection = (surface.CFrame.LookVector + moveDirection).Unit
-                                part.AssemblyLinearVelocity = Vector3.new(climbDirection.X * 50, 50, climbDirection.Z * 50)
-                            end
-                        end
-                    end
-                end
-
-                if not touchingWall then
-                    for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                        end
-                    end
-                end
-            end
-        end
-
-        runService.Stepped:Connect(function()
-            if spiderEnabled then
-                climbWalls()
-            end
-        end)
-    else
-        if player.Character then
-            local character = player.Character
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.PlatformStand = false
-            end
-
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                end
-            end
-        end
-    end
-end)
 local noclipEnabled = false
 local player = game.Players.LocalPlayer
 
-PlayerSection:AddToggle("NoClip [TEST]", false, function(state)
+PlayerSection:AddToggle("NoClip", false, function(state)
     noclipEnabled = state
     local character = player.Character or player.CharacterAdded:Wait()
 
@@ -809,5 +701,28 @@ PlayerSection:AddToggle("NoClip [TEST]", false, function(state)
                 end
             end
         end
+    end
+end)
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+PlayerSection:AddToggle("Click TP", false, function(state)
+    local clickTpEnabled = state
+
+    if clickTpEnabled then
+        mouse.Button1Down:Connect(function()
+            if clickTpEnabled then
+                local targetPosition = mouse.Hit.Position -- mouse
+                local character = player.Character or player.CharacterAdded:Wait()
+                if character then
+                    -- get
+                    local rootPart = character:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local offset = rootPart.Position - character:GetModelCFrame().Position
+                        character:MoveTo(targetPosition + offset)
+                    end
+                end
+            end
+        end)
     end
 end)
