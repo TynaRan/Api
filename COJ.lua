@@ -14,6 +14,81 @@ for _, part in ipairs(character:GetDescendants()) do
         }
     end
 end
+local notify, guiService, tweenService, notificationHolder, notifications, padding =
+    {}, game:GetService("CoreGui"), game:GetService("TweenService"), nil, {}, 10
+
+notificationHolder = Instance.new("ScreenGui")
+notificationHolder.Name = "NotifyHolder"
+notificationHolder.Parent = guiService
+notificationHolder.ResetOnSpawn = false
+
+notify.new = function(message, duration)
+    local outline, frame, label =
+        Instance.new("Frame"), Instance.new("Frame"), Instance.new("TextLabel")
+
+    outline.Name = "Outline"
+    outline.Parent = notificationHolder
+    outline.AnchorPoint = Vector2.new(0, 0)
+    outline.Position = UDim2.new(0, 10, 0, -50)
+    outline.Size = UDim2.new(0, 0, 0, 44)
+    outline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    outline.BorderSizePixel = 0
+
+    frame.Name = "MainFrame"
+    frame.Parent = outline
+    frame.AnchorPoint = Vector2.new(0, 0)
+    frame.Size = UDim2.new(1, -2, 1, -2)
+    frame.Position = UDim2.new(0, 1, 0, 1)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BorderSizePixel = 0
+
+    label.Name = "Text"
+    label.Parent = frame
+    label.AnchorPoint = Vector2.new(0, 0.5)
+    label.Position = UDim2.new(0, 10, 0.5, 0)
+    label.Size = UDim2.new(1, -20, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.RobotoMono
+    label.Text = message or "Notification"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0.9
+    label.TextSize = 20
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local textWidth = label.TextBounds.X + 30
+
+    table.insert(notifications, outline)
+    for index, notification in ipairs(notifications) do
+        local targetY = (index - 1) * (44 + padding)
+        local position = UDim2.new(0, 10, 0, targetY)
+        tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = position}):Play()
+    end
+
+    outline.Position = UDim2.new(0, 10, 0, -50)
+    local finalY = (#notifications - 1) * (44 + padding)
+    tweenService:Create(outline, TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Position = UDim2.new(0, 10, 0, finalY)}):Play()
+    tweenService:Create(outline, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, textWidth, 0, 44)}):Play()
+
+    task.spawn(function()
+        task.wait(duration or 3)
+        tweenService:Create(outline, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 44)}):Play()
+        task.wait(0.5)
+        for i, notification in ipairs(notifications) do
+            if notification == outline then
+                table.remove(notifications, i)
+                break
+            end
+        end
+        for i, notification in ipairs(notifications) do
+            local targetY = (i - 1) * (44 + padding)
+            local position = UDim2.new(0, 10, 0, targetY)
+            tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = position}):Play()
+        end
+        outline:Destroy()
+    end)
+end
+notify.new("Welcome COJ V1.2", 4)
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/cat"))()
 local platform = game:GetService("UserInputService").TouchEnabled 
@@ -21,21 +96,6 @@ local platform = game:GetService("UserInputService").TouchEnabled
     or (game:GetService("UserInputService").MouseEnabled and "Windows" or "Mac")
 
 local Window = Library:CreateWindow("COJ 1.2 - " .. platform, Vector2.new(492, 598), Enum.KeyCode.RightControl)
-local startTime = os.clock()
-
-local sound = Instance.new("Sound", game.Workspace)
-sound.SoundId = "rbxassetid://4590657391"
-sound:Play()
-
-local elapsedTime = string.format("%.2f", os.clock() - startTime)
-
-local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
-local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
-Notification:Notify(
-    {Title = "COJ Loaded", Description = "Loaded with time: " .. elapsedTime .. " seconds"},
-    {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 5, Type = "image"},
-    {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(255, 84, 84)}
-)
 local SettingsTab = Window:CreateTab("Setting")
 local PlayerSection = SettingsTab:CreateSector("Player", "left")
 local PlayerSection2 = SettingsTab:CreateSector("esp", "right")
